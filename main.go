@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -39,8 +40,8 @@ func main() {
 		}
 		msg := update.Message
 		go saveName(msg.From)
-		if msg.Chat.Type == "private" {
-			if msg.Command() == "start" {
+		if msg.Chat.IsPrivate(){
+			if strings.ToLower(msg.Command()) == "start" {
 				handleStart(msg)
 				continue
 			}
@@ -51,7 +52,7 @@ func main() {
 			handleUsage(msg)
 			continue
 		}
-		if msg.Command() == "names" {
+		if strings.ToLower(msg.Command()) == "names" {
 			if msg.ReplyToMessage == nil {
 				handleUsage(msg)
 				continue
@@ -62,12 +63,14 @@ func main() {
 }
 
 func handleStart(msg *tgbotapi.Message) {
-	_, _ = bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Hey there! I'm Names Keeper.\n" +
-		"I can show you one's name history.\n\n" +
-		"There are two ways to ask me for that:\n" +
-		"1. Forward me one's message privately\n" +
-		"2. Reply to one's message with /names command while being in group\n\n" +
-		"Please note that I learn names listening to groups so if I don't know one's history, he/she hasn't been chatting in group where I exist while changing names."))
+	var buff bytes.Buffer
+	buff.WriteString("Hey there! I'm Names Keeper.\n")
+	buff.WriteString("I can show you one's name history.\n\n")
+	buff.WriteString("There are two ways to ask me for that:\n")
+	buff.WriteString("1. Forward me one's message privately\n")
+	buff.WriteString("2. Reply to one's message with /names command while being in group\n\n")
+	buff.WriteString("Please note that I learn names listening to groups so if I don't know one's history, he/she hasn't been chatting in group where I exist while changing names.")
+	_, _ = bot.Send(tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf(buff.String())))
 }
 
 func handleUsage(msg *tgbotapi.Message) {
